@@ -51,7 +51,8 @@ let whiteList = [
     "stylesheets",
     "e6156",
     "login",
-    "register"
+    "register",
+    "auth"
 ];
 
 let inWhitelist = function(url) {
