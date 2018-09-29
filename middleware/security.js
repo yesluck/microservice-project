@@ -88,6 +88,7 @@ let authorize = function(req, rsp, next) {
     let claims = null;
 
     if (req.headers['authorization']) {
+        console.log(req.headers['authorization'])
         claims = get_claims_from_token(req.headers['authorization']);
         if (claims) {
             console.log("claims = " + JSON.stringify(claims));

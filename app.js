@@ -10,6 +10,7 @@ let passport = require('passport');
 let index = require('./routes/index');
 let users = require('./routes/users');
 let customers = require('./routes/customers-full');
+let google_oauth = require('./routes/google_oauth');
 let security = require('./middleware/security');
 
 let logging = require('./lib/logging');
@@ -29,6 +30,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+app.use(passport.initialize());
+app.use(passport.session());
 
 // !!!!!!!!!!!!!!!!
 // This will become important when we discuss middleware and also multi-tenancy.
@@ -56,20 +59,8 @@ app.post('/customers', customers.post);
 app.post('/register', customers.register);
 app.post('/login', customers.login);
 
-app.get(
-  '/auth/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email']
-  })
-)
-
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google'),
-  (req, res) => {
-    res.redirect('/')
-  }
-)
+app.get('/auth/google', google_oauth.google_oauth);
+app.get('/auth/google/callback', google_oauth.google_oauth_callback);
 
 
 // catch 404 and forward to error handler
