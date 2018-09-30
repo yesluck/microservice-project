@@ -1,10 +1,10 @@
 
 let env = {
     beanstalk: {
-        host:  'aa9u927eqb935j.cqgsme1nmjms.us-east-1.rds.amazonaws.com',
+        host:  'microservice-e6156-mysql-db.cgsatnyccg2j.us-east-1.rds.amazonaws.com',
         port: 3306,
         adapter: 'db',
-        url: 'mysql://dbuser2:dbuser2@aa9u927eqb935j.cqgsme1nmjms.us-east-1.rds.amazonaws.com:3306/cloude6156'
+        url: `mysql://yl3786:lyh12280917@microservice-e6156-mysql-db.cgsatnyccg2j.us-east-1.rds.amazonaws.com:3306/mydb`
     },
     local: {
         host:  '127.0.0.1',

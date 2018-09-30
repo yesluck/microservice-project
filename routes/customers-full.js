@@ -89,7 +89,8 @@ let register = function(req, res, next) {
     login_registration.register(data, context).then(
         function(result) {
             if (result) {
-               map_response(result, res);
+                console.log("res: ", result);
+                map_response(result, res);
             }
             else {
                 reject(return_codes.codes.internal_error);
