@@ -297,6 +297,7 @@ let Dao = function(collection) {
                     resolve(result)
                 },
                 function (error) {
+                    console.log(error);
                     let new_error = mapError(error);
                     logging.debug_message("Boom = ", new_error);
                     reject(new_error);

@@ -19,7 +19,7 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:3000/auth/google/callback",
   },
   async function(accessToken, refreshToken, profile, done) {
-    // console.log(profile);
+    console.log(profile);
     console.log("email ", profile.emails[0].value);
     console.log("firstName ", profile.name.givenName);
     console.log("lastName ", profile.name.familyName);
@@ -43,12 +43,32 @@ passport.use(new GoogleStrategy({
     try {
       let result =  await login_registration.register(data, context);
       if (result) {
-        console.log("res: ", result);
+        console.log("social register result: ", result);
+
+        // const sdo = require('./social_information_do');
+        // const social_info_do = new sdo.SocialDAO();
+        // let social_result = await social_info_do.create({
+        //   id: result.id,
+        //   provider: profile.provider,
+        //   social_id: profile.id,
+        //   token: accessToken
+        // }, context);
+        // if (social_result) {
+        //   console.log("social info create result: ", result);
+        //   done(null, user);
+        // } else {
+        //   console.log("error");
+        //   done("err", null);
+        // }
+
+        done(null, user);
       } else {
         console.log("error");
+        done("err", null);
       }
     } catch(e) {
       console.log("exception: ", e);
+      done("err", null);
     }
     
 
@@ -68,6 +88,5 @@ passport.use(new GoogleStrategy({
     //     }
     // );
 
-    done(null, user);
   }
 ));

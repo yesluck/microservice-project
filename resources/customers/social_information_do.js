@@ -2,26 +2,43 @@
 
 let logging = require('../../lib/logging');
 let Dao = require('../dao');
-let sandh = require('../../lib/salthash');
 
 
 // Metadata that defines the collection.
-let customersCollection = {
+let socialCollection = {
     identity: 'social_information',
-    datastore: 'default',
-    primaryKey: 'id',
+    // datastore: 'default',
+    primaryKey: 'id_provider',
+
+    // CREATE TABLE `social_information` (
+    //     `customers_id` varchar(12) NOT NULL,
+    //     `social_provider` varchar(8) NOT NULL,
+    //     `customers_id_social_provider` varchar(20) NOT NULL,
+    //     `social_id` varchar(64) NOT NULL,
+    //     `social_token` varchar(2048) NOT NULL,
+    //     `tenant_id` varchar(16) NOT NULL,
+    //     PRIMARY KEY (`customers_id_social_provider`),
+    //     KEY (`social_id`),
+    //     FOREIGN KEY(`customers_id`) 
+    //     references customers(`customers_id`)
+    //     on delete cascade
+    //   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
     attributes: {
         id: {type: 'string', required: true, columnName: 'customers_id'},
+        provider: {type: 'string', required: true, columnName: 'social_provider'},
+        id_provider: {type: 'string', required: true, columnName: 'customers_id_social_provider'},
+        social_id: {type: 'string', required: true, columnName: 'social_id'},
+        token: {type: 'string', required: true, columnName: 'social_token'},
         tenant_id: {type: 'string', required: true, columnName: 'tenant_id'}
     }
 };
 
 
-let CustomersDAO = function() {
+let SocialDAO = function() {
 
     // Make a DAO and initialize with the collection metadata.
-    this.theDao = new Dao.Dao(customersCollection);
+    this.theDao = new Dao.Dao(socialCollection);
 
     let self = this;
 
@@ -31,18 +48,17 @@ let CustomersDAO = function() {
         // We could have done in generic DAO but I wanted that to be focused just on Sails, Waterline and RDB.
         //
         // Convert and ID lookup to a template look up and add tenant_id from the context.
-        let template = {[customersCollection.primaryKey]: id, "tenant_id": context.tenant,
+        let template = {[socialCollection.primaryKey]: id, "tenant_id": context.tenant,
             status: {"!=": "DELETED"}};
 
 
         return self.theDao.retrieveByTemplate(template, fields).then(
             function (result) {
-                result = convertToDate(result[0]);                  //  Need to convert numeric dates to Date();
                 //logging.debug_message("Result = ", result);
-                return result;
+                return result[0];
             }
         ).catch(function(error) {
-            logging.debug_message("PeopleDAO.retrieveById: error = ", error);
+            logging.debug_message("social_information_do.retrieveById: error = ", error);
         });
     };
 
@@ -58,11 +74,11 @@ let CustomersDAO = function() {
 
         return self.theDao.retrieveByTemplate(tmpl, fields).then(
             function(result) {
-                result = result.map(convertToDate);
+                // result = result.map(convertToDate);
                 return result;
             }
         ).catch(function(error) {
-            logging.debug_message("PeopleDAO.retrieveByTemplate: error = ", error);
+            logging.debug_message("social_information_do.retrieveByTemplate: error = ", error);
         });
     };
 
@@ -71,22 +87,7 @@ let CustomersDAO = function() {
         return new Promise(function (resolve, reject) {
             // Add tenant_id to template.
             data.tenant_id = context.tenant;
-
-            // Need to do two things here.
-            // 1. Convert JavaScript dates to timestamps.
-            // 2. Hash/Salt the password.
-
-            // Set created and modified.
-            data.created = new Date();
-            data.modified = new Date();
-
-            // This is kind of a hack.
-            data.last_login = new Date(0);
-
-            data = convertToDate(data);
-
-            // DO NOT STORE UNENCRYPTED PWs.
-            data.pw = sandh.saltAndHash(data.pw);
+            data.id_provider = data.id + data.provider;
 
             // NOTE: Business layer determines if the created customer's state is PENDING.
             // "Customer" may be an admin or being created manually through some admin tasl.
@@ -100,11 +101,11 @@ let CustomersDAO = function() {
                     resolve(result);
                 },
                 function(error) {
-                    logging.error_message("customersdo.create: Error = ", error);
+                    logging.error_message("social_information_do.create: Error = ", error);
                     reject(error);
                 })
                 .catch(function(exc) {
-                    logging.error_message("customersdo.create: Exception = " + exc);
+                    logging.error_message("social_information_do.create: Exception = " + exc);
                     reject(exc);
                 });
         });
@@ -128,11 +129,11 @@ let CustomersDAO = function() {
                     resolve({});
                 },
                 function(error) {
-                    logging.error_message("customersdo.update: Error = ", error);
+                    logging.error_message("social_information_do.update: Error = ", error);
                     reject(error);
                 })
                 .catch(function(exc) {
-                    logging.error_message("customersdo.update: Exception = " + exc);
+                    logging.error_message("social_information_do.update: Exception = " + exc);
                     reject(exc);
                 });
         });
@@ -157,11 +158,11 @@ let CustomersDAO = function() {
                     resolve({})
                 },
                 function(error) {
-                    logging.error_message("customersdo.delete: Error = ", error);
+                    logging.error_message("social_information_do: Error = ", error);
                     reject(error);
                 })
                 .catch(function(exc) {
-                    logging.error_message("customersdo.delete: Exception = " + exc);
+                    logging.error_message("social_information_do: Exception = " + exc);
                     reject(exc);
                 });
         });
@@ -175,4 +176,4 @@ let CustomersDAO = function() {
 }
 
 
-exports.CustomersDAO = CustomersDAO;
+exports.SocialDAO = SocialDAO;
