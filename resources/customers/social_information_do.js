@@ -3,7 +3,6 @@ const Sequelize = require('sequelize');
 
 const logging = require('../../lib/logging');
 const Dao = require('../dao');
-const customerModel = require('./customersbo').customerModel;
 
 
 
@@ -18,7 +17,7 @@ let socialCollection = {
             field: 'customers_id', 
             primaryKey: true,
             references: {
-                model: customerModel,
+                model: 'customer',
                 key: 'customers_id'
             }
         },

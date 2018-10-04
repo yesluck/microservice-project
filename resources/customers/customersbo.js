@@ -201,5 +201,3 @@ exports.update = function(template, fields, context) {
         Promise.reject(return_codes.codes.invalid_update_datainvalid_update);
     }
 };
-
-exports.customerModel = customersdo.theDao.model;
