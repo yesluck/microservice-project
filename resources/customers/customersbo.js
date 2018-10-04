@@ -140,6 +140,7 @@ exports.retrieveByTemplate = function(template, fields, context) {
 
 exports.create = function(data, context) {
     let functionName = "create";
+    console.log(customersdo.theDao.model);
 
     return new Promise(function (resolve, reject) {
 

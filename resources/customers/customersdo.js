@@ -5,25 +5,13 @@ const logging = require('../../lib/logging');
 const Dao = require('../dao');
 const sandh = require('../../lib/salthash');
 
-// Metadata that defines the collection.
-const customersCollection = {
-    name: "customers",
-    primaryKey: ["id"],
-    attribute: {
-        id: {type: Sequelize.STRING, allowNull: false, field: 'customers_id', primaryKey: true},
-        email: {type: Sequelize.STRING, allowNull: false, field: "customers_email"},
-        status: {type: Sequelize.ENUM('ACTIVE','PENDING','DELETED','SUSPENDED','LOCKED'), allowNull: false, field: 'customers_status'},
-        pw: {type: Sequelize.STRING, allowNull: false, field: 'customers_password'},
-        last_login: {type: Sequelize.DATE, allowNull: false, field: 'customers_last_login'},
-        tenant_id: {type: Sequelize.STRING, allowNull: false, field: 'tenant_id'}
-    }
-};
+const Customer = require('./customer.model').Customer;
 
 
 let CustomersDAO = function() {
 
     // Make a DAO and initialize with the collection metadata.
-    this.theDao = new Dao.Dao(customersCollection);
+    this.theDao = new Dao.Dao(Customer);
 
     let self = this;
 
@@ -49,7 +37,7 @@ let CustomersDAO = function() {
                 console.log("Cannot find the record with given id.");
             }
             return result;
-        } catch(err) {
+        } catch(error) {
             logging.debug_message("PeopleDAO.retrieveById: error = ", error);
         }
 
@@ -71,7 +59,7 @@ let CustomersDAO = function() {
         try {
             result = await self.theDao.retrieveByTemplate(template, fields);
             return result;
-        } catch(err) {
+        } catch(error) {
             logging.debug_message("PeopleDAO.retrieveByTemplate: error = ", error);
         }
     };
@@ -98,9 +86,9 @@ let CustomersDAO = function() {
                 }
                 console.log("Record created: " + result);
                 resolve(result);
-            } catch (err) {
+            } catch (error) {
                 logging.error_message("customersdo.create: Error = ", error);
-                reject(err);
+                reject(error);
             };
 
         });
@@ -122,9 +110,9 @@ let CustomersDAO = function() {
                 }
                 console.log("Records updated: " + result);
                 resolve(result);
-            } catch (err) {
+            } catch (error) {
                 logging.error_message("customersdo.update: Error = ", error);
-                reject(err);
+                reject(error);
             };
 
         });
@@ -143,9 +131,9 @@ let CustomersDAO = function() {
                 result = await self.update(template, data, context);
                 console.log("Records deleted: " + result);
                 resolve(result);
-            } catch (err) {
+            } catch (error) {
                 logging.error_message("customersdo.delete: Error = ", error);
-                reject(err);
+                reject(error);
             };
 
         });

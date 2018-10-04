@@ -77,7 +77,7 @@ exports.register =  function(d, context) {
             function(c) {
                 let new_result = return_codes.codes.registration_success;
                 let claim = security.generate_customer_claims(c, context);
-                console.log("Returning register token = " + JSON.stringify(claim, null, 2));
+                // console.log("Returning register token = " + JSON.stringify(claim, null, 2));
                 new_result.token = claim;
                 new_result.resource = "customers";
                 new_result.id = c.id;

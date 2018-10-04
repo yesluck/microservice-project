@@ -20,4 +20,28 @@ const sequelize = new Sequelize(
     db_info.options
 );
 
+const registerCollection = function(c) {
+    let attrs = {};
+    for (let key in c.attribute) {
+        let value = c.attribute[key];
+        if (typeof value === 'object' && value['type']) {
+            value.allowNull = value.allowNull || false;
+            attrs[key] = value;
+        } else {
+            attrs[key] = {
+                type: value,
+                allowNull: false
+            };
+        }
+    }
+    let model = sequelize.define(
+        c.name,
+        attrs,
+        c.options
+    );
+    return model;
+};
+
+
 exports.sequelize = sequelize;
+exports.registerCollection = registerCollection;
