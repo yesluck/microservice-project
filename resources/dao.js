@@ -8,20 +8,21 @@ let return_codes = require('./return_codes');      // Application standardized R
 
 // Ad hoc approach to getting information based on running local, beanstalk, etc.
 // eb2_environment is the name of the environment variable.
-let environment_name = process.env.eb2_environment || 'local';
-logging.debug_message("environment_name = ", environment_name);
+// let environment_name = process.env.eb2_environment || 'local';
+// logging.debug_message("environment_name = ", environment_name);
 
-// Use the environment variable to get the information about DB conn based on environment.
-let db_info = env.getEnv(environment_name)
-logging.debug_message("s_env = ", db_info);
+// // Use the environment variable to get the information about DB conn based on environment.
+// let db_info = env.getEnv(environment_name)
+// logging.debug_message("s_env = ", db_info);
 
 
-const sequelize = new Sequelize(
-    db_info.database,
-    db_info.username, 
-    db_info.password, 
-    db_info.options
-);
+// const sequelize = new Sequelize(
+//     db_info.database,
+//     db_info.username, 
+//     db_info.password, 
+//     db_info.options
+// );
+const sequelize = require('./db').sequelize;
 
 
 const registerCollection = function(c) {
@@ -122,7 +123,7 @@ let Dao = function(collection) {
             try {
                 await self.model.sync();
                 // sequelize model findAll seems does not support wildcard attributes
-                if (fields.length == 1 && fields[0] == "*") {
+                if (fields && fields.length == 1 && fields[0] == "*") {
                     fields = null
                 }
                 let retrieveInfo = {

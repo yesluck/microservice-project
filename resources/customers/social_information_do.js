@@ -1,36 +1,31 @@
 
+const Sequelize = require('sequelize');
 
-let logging = require('../../lib/logging');
-let Dao = require('../dao');
+const logging = require('../../lib/logging');
+const Dao = require('../dao');
+const customerModel = require('./customersbo').customerModel;
+
 
 
 // Metadata that defines the collection.
 let socialCollection = {
-    identity: 'social_information',
-    // datastore: 'default',
-    primaryKey: 'id_provider',
-
-    // CREATE TABLE `social_information` (
-    //     `customers_id` varchar(12) NOT NULL,
-    //     `social_provider` varchar(8) NOT NULL,
-    //     `customers_id_social_provider` varchar(20) NOT NULL,
-    //     `social_id` varchar(64) NOT NULL,
-    //     `social_token` varchar(2048) NOT NULL,
-    //     `tenant_id` varchar(16) NOT NULL,
-    //     PRIMARY KEY (`customers_id_social_provider`),
-    //     KEY (`social_id`),
-    //     FOREIGN KEY(`customers_id`) 
-    //     references customers(`customers_id`)
-    //     on delete cascade
-    //   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-    attributes: {
-        id: {type: 'string', required: true, columnName: 'customers_id'},
-        provider: {type: 'string', required: true, columnName: 'social_provider'},
-        id_provider: {type: 'string', required: true, columnName: 'customers_id_social_provider'},
-        social_id: {type: 'string', required: true, columnName: 'social_id'},
-        token: {type: 'string', required: true, columnName: 'social_token'},
-        tenant_id: {type: 'string', required: true, columnName: 'tenant_id'}
+    name: 'social',
+    primaryKey: ['id', 'provider'],
+    attribute: {
+        id: {
+            type: Sequelize.STRING, 
+            allowNull: false, 
+            field: 'customers_id', 
+            primaryKey: true,
+            references: {
+                model: customerModel,
+                key: 'customers_id'
+            }
+        },
+        provider: {type: Sequelize.STRING, allowNull: false, field: 'social_provider', primaryKey: true},
+        social_id: {type: Sequelize.STRING, allowNull: false, field: 'social_id'},
+        token: {type: Sequelize.STRING, allowNull: false, field: 'social_token'},
+        tenant_id: {type: Sequelize.STRING, allowNull: false, field: 'tenant_id'}
     }
 };
 
@@ -42,72 +37,83 @@ let SocialDAO = function() {
 
     let self = this;
 
-    this.retrieveById = function(id,  fields, context) {
+    this.retrieveById = async function(pk,  fields, context) {
 
         // This is where we introduce multi-tenancy for data access.
         // We could have done in generic DAO but I wanted that to be focused just on Sails, Waterline and RDB.
         //
         // Convert and ID lookup to a template look up and add tenant_id from the context.
-        let template = {[socialCollection.primaryKey]: id, "tenant_id": context.tenant,
-            status: {"!=": "DELETED"}};
 
+        if (!pk['id'] || !pk['provider']) {
+            console.log("Error: At least one column missing in primary key.");
+            return null;
+        }
 
-        return self.theDao.retrieveByTemplate(template, fields).then(
-            function (result) {
-                //logging.debug_message("Result = ", result);
-                return result[0];
+        let template = {
+            id: pk['id'],
+            provider: pk['provider'],
+            tenant_id: context.tenant,
+            status: {
+                [Sequelize.Op.ne]: "DELETED"
             }
-        ).catch(function(error) {
-            logging.debug_message("social_information_do.retrieveById: error = ", error);
-        });
+        };
+
+        try {
+            result = await self.theDao.retrieveByTemplate(template, fields);
+            if (result) {
+                result = result[0];
+            } else {
+                console.log("Cannot find the record with given key.");
+            }
+            return result;
+        } catch(err) {
+            logging.debug_message("SocialDAO.retrieveById: error = ", error);
+        }
+
     };
 
     // Basically the same logic.
-    this.retrieveByTemplate = function(tmpl, fields, context) {
+    this.retrieveByTemplate = async function(template, fields, context) {
 
         // Add tenant_id to template.
-        tmpl.tenant_id = context.tenant;
+        template.tenant_id = context.tenant;
 
-        if (!tmpl.status) {
-            tmpl.status = {"!=": "DELETED"}
+        if (!template.status) {
+            template.status = {
+                [Sequelize.Op.ne]: "DELETED"
+            }
         }
 
-        return self.theDao.retrieveByTemplate(tmpl, fields).then(
-            function(result) {
-                // result = result.map(convertToDate);
-                return result;
-            }
-        ).catch(function(error) {
-            logging.debug_message("social_information_do.retrieveByTemplate: error = ", error);
-        });
+        try {
+            result = await self.theDao.retrieveByTemplate(template, fields);
+            return result;
+        } catch(err) {
+            logging.debug_message("SocialDAO.retrieveByTemplate: error = ", error);
+        }
     };
+
 
     this.create = function(data, context) {
 
-        return new Promise(function (resolve, reject) {
+        return new Promise(async function (resolve, reject) {
             // Add tenant_id to template.
             data.tenant_id = context.tenant;
-            data.id_provider = data.id + data.provider;
 
             // NOTE: Business layer determines if the created customer's state is PENDING.
             // "Customer" may be an admin or being created manually through some admin tasl.
 
+            try {
+                result = await self.theDao.create(data);
+                if (result === undefined || result == null) {
+                    result = {}
+                }
+                console.log("Record created: " + result);
+                resolve(result);
+            } catch (err) {
+                logging.error_message("socialInfoDo.create: Error = ", error);
+                reject(err);
+            };
 
-            self.theDao.create(data).then(
-                function (result) {
-                    if (result === undefined || result == null) {
-                        result = {}
-                    }
-                    resolve(result);
-                },
-                function(error) {
-                    logging.error_message("social_information_do.create: Error = ", error);
-                    reject(error);
-                })
-                .catch(function(exc) {
-                    logging.error_message("social_information_do.create: Exception = " + exc);
-                    reject(exc);
-                });
         });
     };
 
@@ -115,27 +121,24 @@ let SocialDAO = function() {
     // Will have to get row_count or do a findByTemplateFirst.
     self.update = function(template, fields, context) {
 
-        return new Promise(function (resolve, reject) {
+        return new Promise(async function (resolve, reject) {
             // Add tenant_id to template.
 
             template.tenant_id = context.tenant;
-            template.status = {"!=": "DELETED"}
+            template.status = {[Sequelize.Op.ne]: "DELETED"};
 
-            self.theDao.update(template, fields).then(
-                function (result) {
-                    if (result === undefined || result == null) {
-                        result = {}
-                    }
-                    resolve({});
-                },
-                function(error) {
-                    logging.error_message("social_information_do.update: Error = ", error);
-                    reject(error);
-                })
-                .catch(function(exc) {
-                    logging.error_message("social_information_do.update: Exception = " + exc);
-                    reject(exc);
-                });
+            try {
+                result = await self.theDao.update(template, fields);
+                if (result === undefined || result == null) {
+                    result = {}
+                }
+                console.log("Records updated: " + result);
+                resolve(result);
+            } catch (err) {
+                logging.error_message("socialInfoDo.update: Error = ", error);
+                reject(err);
+            };
+
         });
 
     };
@@ -144,29 +147,20 @@ let SocialDAO = function() {
     // Will have to get row_count or do a findByTemplateFirst.
     self.delete = function(template, context) {
 
-        return new Promise(function (resolve, reject) {
-            // Add tenant_id to template.
-            template.tenant_id = context.tenant;
+        return new Promise(async function (resolve, reject) {
 
             let data = { status: "DELETED"};
 
-            self.update(template, data, context).then(
-                function (result) {
-                    if (result === undefined || result == null) {
-                        result = {}
-                    }
-                    resolve({})
-                },
-                function(error) {
-                    logging.error_message("social_information_do: Error = ", error);
-                    reject(error);
-                })
-                .catch(function(exc) {
-                    logging.error_message("social_information_do: Exception = " + exc);
-                    reject(exc);
-                });
-        });
+            try {
+                result = await self.update(template, data, context);
+                console.log("Records deleted: " + result);
+                resolve(result);
+            } catch (err) {
+                logging.error_message("socialInfoDo.delete: Error = ", error);
+                reject(err);
+            };
 
+        });
     };
 
     // Custom function. Counts number of IDs matching a prefix.
