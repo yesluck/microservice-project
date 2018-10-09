@@ -55,11 +55,7 @@ let Dao = function(model) {
                     attributes: fields
                 }
                 result = await self.model.findAll(retrieveInfo);
-                if (result) {
-                    resolve(result);
-                } else {
-                    reject("Error in Dao.retrieveByTemplate");
-                }
+                resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.retrieveByTemplate = " + err);
                 reject(err);
@@ -68,13 +64,12 @@ let Dao = function(model) {
     };
 
 
-    // Ditto
     self.create = function(data, fields) {
         return new Promise(async function(resolve, reject) {
             try {
                 await self.model.sync();
                 result = await self.model.create(data, {fields: fields});
-                console.log("Created = " + JSON.stringify(result))
+                logging.debug_message("Created = " + JSON.stringify(result));
                 resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.create = " + err);
@@ -90,6 +85,7 @@ let Dao = function(model) {
             try {
                 await self.model.sync();
                 result = await self.model.update(updates, {where: template});
+                logging.debug_message("Updated = " + JSON.stringify(result));
                 resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.update = " + err);
@@ -105,6 +101,7 @@ let Dao = function(model) {
             try {
                 await self.model.sync();
                 result = await self.model.destroy({where: template});
+                logging.debug_message("Deleted = " + JSON.stringify(result));
                 resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.delete = " + err);
@@ -118,6 +115,7 @@ let Dao = function(model) {
         return new Promise(async function (resolve, reject) {
             try {
                 result = await sequelize.query(q);
+                logging.debug_message(`Result for query ${q} = ${JSON.stringify(result)}`);
                 resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.customQ = " + err);
