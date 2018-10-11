@@ -11,8 +11,10 @@ const customersCollection = {
     primaryKey: ["id"],
     attribute: {
         id: {type: Sequelize.STRING, allowNull: false, field: 'customers_id', primaryKey: true},
-        email: {type: Sequelize.STRING, allowNull: false, field: "customers_email"},
+        email: {type: Sequelize.STRING, allowNull: false, field: "customers_email", unique:true},
         status: {type: Sequelize.ENUM('ACTIVE','PENDING','DELETED','SUSPENDED','LOCKED'), allowNull: false, field: 'customers_status'},
+        firstName: {type: Sequelize.STRING, allowNull: false, field: 'customers_firstname'},
+        lastName: {type: Sequelize.STRING, allowNull: false, field: 'customers_lastname'},
         pw: {type: Sequelize.STRING, allowNull: false, field: 'customers_password'},
         last_login: {type: Sequelize.DATE, allowNull: false, field: 'customers_last_login'},
         tenant_id: {type: Sequelize.STRING, allowNull: false, field: 'tenant_id'}
@@ -27,53 +29,59 @@ let CustomersDAO = function() {
 
     let self = this;
 
-    this.retrieveById = async function(id,  fields, context) {
+    this.retrieveById = function(id,  fields, context) {
 
         // This is where we introduce multi-tenancy for data access.
         // We could have done in generic DAO but I wanted that to be focused just on Sails, Waterline and RDB.
         //
         // Convert and ID lookup to a template look up and add tenant_id from the context.
-        let template = {
-            id: id,
-            tenant_id: context.tenant,
-            status: {
-                [Sequelize.Op.ne]: "DELETED"
+        return new Promise(async function (resolve, reject) {
+            let template = {
+                id: id,
+                tenant_id: context.tenant,
+                status: {
+                    [Sequelize.Op.ne]: "DELETED"
+                }
+            };
+    
+            try {
+                result = await self.theDao.retrieveByTemplate(template, fields);
+                if (result) {
+                    result = result[0];
+                } else {
+                    console.log("Cannot find the record with given id.");
+                    result = null;
+                }
+                resolve(result);
+            } catch(err) {
+                logging.debug_message("PeopleDAO.retrieveById: error = ", err);
+                reject(err);
             }
-        };
-
-        try {
-            result = await self.theDao.retrieveByTemplate(template, fields);
-            if (result) {
-                result = result[0];
-            } else {
-                console.log("Cannot find the record with given id.");
-            }
-            return result;
-        } catch(err) {
-            logging.debug_message("PeopleDAO.retrieveById: error = ", error);
-        }
-
+        });
     };
 
 
     // Basically the same logic.
-    this.retrieveByTemplate = async function(template, fields, context) {
+    this.retrieveByTemplate = function(template, fields, context) {
 
-        // Add tenant_id to template.
-        template.tenant_id = context.tenant;
+        return new Promise(async function (resolve, reject) {
+            // Add tenant_id to template.
+            template.tenant_id = context.tenant;
 
-        if (!template.status) {
-            template.status = {
-                [Sequelize.Op.ne]: "DELETED"
+            if (!template.status) {
+                template.status = {
+                    [Sequelize.Op.ne]: "DELETED"
+                }
             }
-        }
 
-        try {
-            result = await self.theDao.retrieveByTemplate(template, fields);
-            return result;
-        } catch(err) {
-            logging.debug_message("PeopleDAO.retrieveByTemplate: error = ", error);
-        }
+            try {
+                result = await self.theDao.retrieveByTemplate(template, fields);
+                resolve(result);
+            } catch(err) {
+                logging.debug_message("PeopleDAO.retrieveByTemplate: error = ", err);
+                reject(err);
+            }
+        });
     };
 
 
@@ -99,7 +107,7 @@ let CustomersDAO = function() {
                 console.log("Record created: " + result);
                 resolve(result);
             } catch (err) {
-                logging.error_message("customersdo.create: Error = ", error);
+                logging.error_message("customersdo.create: Error = ", err);
                 reject(err);
             };
 
@@ -123,7 +131,7 @@ let CustomersDAO = function() {
                 console.log("Records updated: " + result);
                 resolve(result);
             } catch (err) {
-                logging.error_message("customersdo.update: Error = ", error);
+                logging.error_message("customersdo.update: Error = ", err);
                 reject(err);
             };
 
@@ -144,7 +152,7 @@ let CustomersDAO = function() {
                 console.log("Records deleted: " + result);
                 resolve(result);
             } catch (err) {
-                logging.error_message("customersdo.delete: Error = ", error);
+                logging.error_message("customersdo.delete: Error = ", err);
                 reject(err);
             };
 

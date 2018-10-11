@@ -132,11 +132,7 @@ let Dao = function(collection) {
                 }
                 console.log(JSON.stringify(retrieveInfo));
                 result = await self.model.findAll(retrieveInfo);
-                if (result) {
-                    resolve(result);
-                } else {
-                    reject("Error in Dao.retrieveByTemplate");
-                }
+                resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.retrieveByTemplate = " + err);
                 reject(err);
@@ -151,11 +147,7 @@ let Dao = function(collection) {
             try {
                 await self.model.sync();
                 result = await self.model.create(data, {fields: fields});
-                if (result) {
-                    resolve(result);
-                } else {
-                    reject("Error in Dao.create");
-                }
+                resolve(result);
             } catch (err) {
                 logging.debug_message("Error in Dao.create = " + err);
                 reject(err);

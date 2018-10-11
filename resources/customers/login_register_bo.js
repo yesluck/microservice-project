@@ -3,7 +3,6 @@ const hash = require('../../lib/salthash');
 const cbo =  require('./customersbo');
 
 
-
 let logging = require('../../lib/logging');
 let return_codes =  require('../return_codes');
 
@@ -69,7 +68,7 @@ exports.login =  function(d, context) {
 };
 
 
-exports.register =  function(d, context) {
+exports.register = function(d, context) {
 
     d.status = "PENDING";
     return new Promise(function(resolve, reject) {
@@ -88,5 +87,24 @@ exports.register =  function(d, context) {
                 reject(error);
             }
         )
+    });
+};
+
+exports.registerBySocial = function(d, context, socialInfo) {
+    d.status = "PENDING";
+    return new Promise(async function(resolve, reject) {
+        try {
+            let c = await cbo.createBySocial(d, context, socialInfo);
+            let new_result = return_codes.codes.registration_success;
+            let claim = security.generate_customer_claims(c, context);
+            console.log("Returning register token = " + JSON.stringify(claim, null, 2));
+            new_result.token = claim;
+            new_result.resource = "customers";
+            new_result.id = c.id;
+            resolve(new_result);
+        } catch(err) {
+            logging.error_message("logonbo.login: error = " + err);
+            reject(err);
+        }
     });
 };

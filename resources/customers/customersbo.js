@@ -8,6 +8,8 @@
 const cdo = require('./customersdo');
 let customersdo = new cdo.CustomersDAO();
 
+const sdo = require('./socialsdo');
+
 let logging = require('../../lib/logging');
 let return_codes =  require('../return_codes');                     // Come standard return codes for the app.
 let moduleName = "customersbo.";                                    // Sort of used in logging messages.
@@ -180,6 +182,41 @@ exports.create = function(data, context) {
             );
         }
 
+    });
+};
+
+exports.createBySocial = function(data, context, socialInfo) {
+    functionName = "createBySocial";
+
+    return new Promise(async function(resolve, reject) {
+
+        try {
+            // Lucky guess?
+            // Removed with a trigger
+            data.id = generateId(data.lastName, data.firstName);
+            // This is going to get set in the database.
+            // data.id = "XXXXX";
+
+            data.status = "PENDING"; // Until confirmation is always PENDING.
+
+            let email = data.email;
+
+            if (validateCreateData(data) == false) {
+                reject(return_codes.codes.invalid_create_data);
+            }
+            else {
+                let customersdo = new cdo.CustomersDAO();
+                await customersdo.create(data, context);
+                let retrievedResult = await exports.retrieveByTemplate({email: email}, null, context);
+                socialInfo.id = retrievedResult[0].id;
+                let socialsdo = new sdo.SocialDAO();
+                let socialResult = await socialsdo.create(socialInfo, context);
+                resolve(socialResult);
+            }
+        } catch(error) {
+            logging.error_message(moduleName + functionName + "error = ", error);
+            reject(error)
+        }
     });
 };
 
