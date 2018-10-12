@@ -6,7 +6,7 @@
 
 // Initialize and get a copy of the DO to support this BO.
 const cdo = require('./customersdo');
-let customersdo = new cdo.CustomersDAO();
+// let customersdo = new cdo.CustomersDAO();
 
 const sdo = require('./socialsdo');
 
@@ -95,7 +95,7 @@ exports.retrieveById = function(id, fields, context) {
     let functionName = "retrieveById:";
 
     return new Promise(function (resolve, reject) {
-
+        let customersdo = new cdo.CustomersDAO();
         customersdo.retrieveById(id, fields, context).then(
             function (result) {
                 //logging.debug_message(moduleName + functionName + "Result = ", result);
@@ -122,6 +122,7 @@ exports.retrieveByTemplate = function(template, fields, context) {
             reject(return_codes.codes.invalid_query);
         }
         else {
+            let customersdo = new cdo.CustomersDAO();
             customersdo.retrieveByTemplate(template, fields, context).then(
                 function (result) {
                     //logging.debug_message(moduleName + functionName + "Result = ", result);
@@ -159,6 +160,7 @@ exports.create = function(data, context) {
             reject(return_codes.codes.invalid_create_data);
         }
         else {
+            let customersdo = new cdo.CustomersDAO();
             customersdo.create(data, context).then(
                 function (result) {
                     //logging.debug_message(moduleName + functionName + "Result = ", result);
@@ -224,6 +226,7 @@ exports.createBySocial = function(data, context, socialInfo) {
 exports.delete = function(template, context) {
     // Should do business logic and possible wrap/map errors.
     // Getting lazy.
+    let customersdo = new cdo.CustomersDAO();
     return customersdo.delete(template, context);
 
 };
