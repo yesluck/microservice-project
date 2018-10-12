@@ -17,7 +17,12 @@ const customersCollection = {
         lastName: {type: Sequelize.STRING, allowNull: false, field: 'customers_lastname'},
         pw: {type: Sequelize.STRING, allowNull: false, field: 'customers_password'},
         last_login: {type: Sequelize.DATE, allowNull: false, field: 'customers_last_login'},
+        created: {type: Sequelize.DATE, allowNull: false, field: 'customers_created'},
+        modified: {type: Sequelize.DATE, allowNull: false, field: 'customers_modified'},
         tenant_id: {type: Sequelize.STRING, allowNull: false, field: 'tenant_id'}
+    },
+    options: {
+        timestamps: false
     }
 };
 
@@ -92,6 +97,8 @@ let CustomersDAO = function() {
             // Add tenant_id to template.
             data.tenant_id = context.tenant;
             data.last_login = new Date();
+            data.created = new Date();
+            data.modified = new Date();
 
             // DO NOT STORE UNENCRYPTED PWs.
             data.pw = sandh.saltAndHash(data.pw);

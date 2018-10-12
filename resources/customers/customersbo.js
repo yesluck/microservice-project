@@ -211,7 +211,7 @@ exports.createBySocial = function(data, context, socialInfo) {
                 socialInfo.id = retrievedResult[0].id;
                 let socialsdo = new sdo.SocialDAO();
                 let socialResult = await socialsdo.create(socialInfo, context);
-                resolve(socialResult);
+                resolve({id: socialInfo.id});
             }
         } catch(error) {
             logging.error_message(moduleName + functionName + "error = ", error);

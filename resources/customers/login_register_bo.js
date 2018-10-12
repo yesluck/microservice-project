@@ -47,7 +47,7 @@ exports.login =  function(d, context) {
                 // Compare the hashed/salted value of the submitted password with the stored version.
                 // If it matches, return a new JSON Web Token. We are also going to return the user ID
                 // to enable forming a URL or lookup.
-                if (hash.compare(pw, c.pw)) {
+                if (c && hash.compare(pw, c.pw)) {
                     let claim = security.generate_customer_claims(c, context);
                     let result = return_codes.codes.login_success;
                     result.token = claim;
